@@ -26,15 +26,11 @@ namespace SimpleWebBrowser
         private List<string> history = new List<string>();
         private int currentHistoryIndex = -1;
 
-        private readonly Color primaryColor = Color.FromArgb(64, 105, 225);  // Royal blue
-        private readonly Color secondaryColor = Color.FromArgb(245, 247, 250);  // Light blue-gray
-        private readonly Color accentColor = Color.FromArgb(46, 204, 113);  // Emerald green
-        private readonly Color backgroundColor = Color.FromArgb(250, 251, 252);  // Off-white
-        private readonly Color gradientStart = Color.FromArgb(64, 105, 225);  // Royal blue
-        private readonly Color gradientEnd = Color.FromArgb(72, 126, 238);    // Lighter blue
+        private readonly Color primaryColor = Color.FromArgb(51, 103, 214);  // Professional blue
+        private readonly Color secondaryColor = Color.FromArgb(241, 243, 244);  // Light gray
+        private readonly Color accentColor = Color.FromArgb(25, 71, 229);  // Darker blue for hover/focus
         private readonly Font defaultFont = new Font("Segoe UI", 9F);
         private readonly Font titleFont = new Font("Segoe UI Semibold", 10F);
-        private readonly Font headerFont = new Font("Segoe UI", 11F, FontStyle.Bold);
 
         public BrowserForm()
         {
@@ -94,33 +90,20 @@ namespace SimpleWebBrowser
 
             // Navigation controls
             var navPanel = new Panel { 
-                Height = 45, 
+                Height = 40, 
                 Dock = DockStyle.Top,
-                BackColor = gradientStart,
-                Padding = new Padding(8)
-            };
-            navPanel.Paint += (s, e) => {
-                var rect = new Rectangle(0, 0, navPanel.Width, navPanel.Height);
-                using (var brush = new System.Drawing.Drawing2D.LinearGradientBrush(
-                    rect, gradientStart, gradientEnd, System.Drawing.Drawing2D.LinearGradientMode.Horizontal))
-                {
-                    e.Graphics.FillRectangle(brush, rect);
-                }
+                BackColor = secondaryColor,
+                Padding = new Padding(5)
             };
 
             // Create custom button style
             Action<Button> styleButton = (btn) => {
                 btn.FlatStyle = FlatStyle.Flat;
                 btn.FlatAppearance.BorderSize = 0;
-                btn.BackColor = Color.FromArgb(255, 255, 255, 40);
-                btn.ForeColor = Color.White;
+                btn.BackColor = Color.Transparent;
                 btn.Font = new Font("Segoe UI", 12);
                 btn.Cursor = Cursors.Hand;
-                btn.Size = new Size(35, 35);
-                btn.Margin = new Padding(3);
-                
-                btn.MouseEnter += (s, e) => btn.BackColor = Color.FromArgb(255, 255, 255, 80);
-                btn.MouseLeave += (s, e) => btn.BackColor = Color.FromArgb(255, 255, 255, 40);
+                btn.Size = new Size(32, 32);
             };
 
             backButton = new Button { Text = "←" };
@@ -133,59 +116,19 @@ namespace SimpleWebBrowser
             styleButton(homeButton);
 
             addressBar = new TextBox { 
-                Width = 450,
+                Width = 500,
                 Font = new Font("Segoe UI", 10),
-                BorderStyle = BorderStyle.None,
-                BackColor = Color.FromArgb(255, 255, 255, 240),
-                ForeColor = Color.White,
-                Margin = new Padding(5, 0, 5, 0),
-                Height = 28
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(5, 2, 5, 2)
             };
-            var addressPanel = new Panel {
-                Padding = new Padding(1),
-                BackColor = Color.FromArgb(255, 255, 255, 80),
-                Height = 30,
-                Width = 452
-            };
-            addressPanel.Controls.Add(addressBar);
 
             goButton = new Button { 
                 Text = "Go",
-                Width = 45,
+                Width = 50,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = accentColor,
+                BackColor = primaryColor,
                 ForeColor = Color.White,
-                Cursor = Cursors.Hand,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
-            };
-
-            var compileButton = new Button {
-                Text = "⚙ Run",
-                Width = 70,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(255, 255, 255, 60),
-                ForeColor = Color.White,
-                Cursor = Cursors.Hand,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                TextImageRelation = TextImageRelation.ImageBeforeText,
-                Margin = new Padding(5, 0, 0, 0)
-            };
-            compileButton.Click += async (s, e) => {
-                if (addressBar.Text.EndsWith(".html") || addressBar.Text.EndsWith(".htm"))
-                {
-                    try
-                    {
-                        System.Diagnostics.Process.Start(addressBar.Text);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Error running the file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Please enter a valid HTML file path to run.", "Invalid File", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                Cursor = Cursors.Hand
             };
 
             navPanel.Controls.AddRange(new Control[] { 
@@ -293,7 +236,7 @@ namespace SimpleWebBrowser
                 Padding = new Padding(5, 2, 5, 2)
             };
             navFlow.Controls.AddRange(new Control[] { 
-                backButton, forwardButton, reloadButton, homeButton, addressPanel, goButton, compileButton
+                backButton, forwardButton, reloadButton, homeButton, addressBar, goButton 
             });
             navPanel.Controls.Add(navFlow);
 
