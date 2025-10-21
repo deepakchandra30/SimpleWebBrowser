@@ -1,39 +1,193 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Windows.Forms;
+using Microsoft.EntityFrameworkCore;
+using SimpleWebBrowser.Models;
 
 namespace SimpleWebBrowser
 {
-    public static class BrowserStorage
+    public class BrowserStorage
     {
-        public static string LoadHome() => File.Exists("home.txt") ? File.ReadAllText("home.txt") : "https://hw.ac.uk";
-        public static void SaveHome(string url) => File.WriteAllText("home.txt", url);
+        private static BrowserStorage _instance;
+        private readonly BrowserDbContext _context;
+        private User _currentUser;
 
-        public static void SaveBookmarks(Dictionary<string, string> bookmarks)
+        public static BrowserStorage Instance
         {
-            File.WriteAllLines("bookmarks.txt", bookmarks.Select(kv => $"{kv.Key}|{kv.Value}"));
-        }
-
-        public static Dictionary<string, string> LoadBookmarks()
-        {
-            var dict = new Dictionary<string, string>();
-            if (File.Exists("bookmarks.txt"))
+            get
             {
-                foreach (var line in File.ReadAllLines("bookmarks.txt"))
+                if (_instance == null)
                 {
-                    var parts = line.Split('|');
-                    if (parts.Length == 2) dict[parts[0]] = parts[1];
+                    _instance = new BrowserStorage();
                 }
+                return _instance;
             }
-            return dict;
         }
 
-        public static void SaveHistory(List<string> history)
+        // Private constructor for singleton pattern
+        private BrowserStorage()
         {
-            File.WriteAllLines("history.txt", history);
+            try
+            {
+                _context = new BrowserDbContext();
+                _context.Database.EnsureCreated();
+            }
+            catch
+            {
+                // Silently handle database initialization errors
+            }
         }
 
-        public static List<string> LoadHistory() =>
-            File.Exists("history.txt") ? File.ReadAllLines("history.txt").ToList() : new List<string>();
+        public bool Login(string username, string password)
+        {
+            try
+            {
+                var passwordHash = HashPassword(password);
+                _currentUser = _context.Users
+                    .Include(u => u.Bookmarks)
+                    .Include(u => u.History)
+                    .FirstOrDefault(u => u.Username == username && u.PasswordHash == passwordHash);
+
+                return _currentUser != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool Register(string username, string password)
+        {
+            try
+            {
+                if (_context.Users.Any(u => u.Username == username))
+                {
+                    return false;
+                }
+
+                _currentUser = new User
+                {
+                    Username = username,
+                    PasswordHash = HashPassword(password),
+                    HomePage = "",
+                    Bookmarks = new List<Bookmark>(),
+                    History = new List<HistoryEntry>()
+                };
+
+                _context.Users.Add(_currentUser);
+                _context.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public void Logout()
+        {
+            _currentUser = null;
+        }
+
+        public string LoadHome()
+        {
+            return _currentUser?.HomePage ?? "";
+        }
+
+        public void SaveHome(string url)
+        {
+            if (_currentUser != null)
+            {
+                _currentUser.HomePage = url?.Trim() ?? "";
+                _context.SaveChanges();
+            }
+        }
+
+        public Dictionary<string, string> LoadBookmarks()
+        {
+            if (_currentUser == null)
+                return new Dictionary<string, string>();
+
+            return _context.Bookmarks
+                .Where(b => b.UserId == _currentUser.Id)
+                .ToDictionary(b => b.Name, b => b.Url);
+        }
+
+        public void SaveBookmarks(Dictionary<string, string> bookmarks)
+        {
+            try 
+            {
+                if (_currentUser == null) return;
+
+                // Remove old bookmarks
+                var oldBookmarks = _context.Bookmarks.Where(b => b.UserId == _currentUser.Id);
+                _context.Bookmarks.RemoveRange(oldBookmarks);
+
+                // Add new bookmarks
+                foreach (var bookmark in bookmarks)
+                {
+                    _context.Bookmarks.Add(new Bookmark
+                    {
+                        UserId = _currentUser.Id,
+                        Name = bookmark.Key,
+                        Url = bookmark.Value
+                    });
+                }
+
+                _context.SaveChanges();
+            }
+            catch
+            {
+                // Silently handle bookmark saving errors
+            }
+        }
+
+        public List<string> LoadHistory()
+        {
+            if (_currentUser == null)
+                return new List<string>();
+
+            return _context.History
+                .Where(h => h.UserId == _currentUser.Id)
+                .OrderBy(h => h.VisitedAt)
+                .Select(h => h.Url)
+                .ToList();
+        }
+
+        public void SaveHistory(List<string> history)
+        {
+            if (_currentUser == null) return;
+
+            // Remove old history
+            var oldHistory = _context.History.Where(h => h.UserId == _currentUser.Id);
+            _context.History.RemoveRange(oldHistory);
+
+            // Add new history
+            foreach (var url in history)
+            {
+                _context.History.Add(new HistoryEntry
+                {
+                    UserId = _currentUser.Id,
+                    Url = url,
+                    VisitedAt = DateTime.Now
+                });
+            }
+
+            _context.SaveChanges();
+        }
+
+        private static string HashPassword(string password)
+        {
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
+        }
+
+        public bool IsLoggedIn => _currentUser != null;
+        public string CurrentUsername => _currentUser?.Username;
     }
 }
