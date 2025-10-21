@@ -10,26 +10,26 @@ using SimpleWebBrowser.Models;
 
 namespace SimpleWebBrowser
 {
-    public class BrowserStorage
+    public class DataManager
     {
-        private static BrowserStorage _instance;
+        private static DataManager _instance;
         private readonly BrowserDbContext _context;
         private User _currentUser;
 
-        public static BrowserStorage Instance
+        public static DataManager Instance
         {
             get
             {
                 if (_instance == null)
                 {
-                    _instance = new BrowserStorage();
+                    _instance = new DataManager();
                 }
                 return _instance;
             }
         }
 
         // Private constructor for singleton pattern
-        private BrowserStorage()
+        private DataManager()
         {
             try
             {

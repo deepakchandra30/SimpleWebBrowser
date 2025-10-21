@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace SimpleWebBrowser
 {
-    public class BrowserForm : Form
+    public class MainForm : Form
     {
         private TextBox addressBar;
         private RichTextBox displayBox;
@@ -20,7 +20,7 @@ namespace SimpleWebBrowser
         private Label statusLabel;
 
         private SimpleBrowserCore browser = new SimpleBrowserCore();
-        private BrowserStorage storage = BrowserStorage.Instance;
+        private DataManager storage = DataManager.Instance;
         private string homeUrl;
         private Dictionary<string, string> bookmarks = new Dictionary<string, string>();
         private List<string> history = new List<string>();
@@ -32,7 +32,7 @@ namespace SimpleWebBrowser
         private readonly Font defaultFont = new Font("Segoe UI", 9F);
         private readonly Font titleFont = new Font("Segoe UI Semibold", 10F);
 
-        public BrowserForm()
+        public MainForm()
         {
             Text = "Simple C# Web Browser";
             Size = new Size(1200, 800);
@@ -210,12 +210,43 @@ namespace SimpleWebBrowser
                 Dock = DockStyle.Fill,
                 Margin = new Padding(0, 0, 0, 10)
             };
+
+            // History header with clear button
+            var historyHeaderPanel = new Panel {
+                Dock = DockStyle.Top,
+                Height = 25
+            };
+
             var historyLabel = new Label { Text = "History" };
             styleHeader(historyLabel);
+            historyLabel.Dock = DockStyle.Left;
+            historyLabel.Width = 150;
+
+            var clearHistoryButton = new Button {
+                Text = "Clear History",
+                Dock = DockStyle.Right,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Transparent,
+                ForeColor = primaryColor,
+                Font = defaultFont,
+                Cursor = Cursors.Hand,
+                Width = 80
+            };
+            clearHistoryButton.Click += (s, e) => {
+                history.Clear();
+                currentHistoryIndex = -1;
+                UpdateHistoryList();
+                storage.SaveHistory(history);
+            };
+
+            historyHeaderPanel.Controls.Add(clearHistoryButton);
+            historyHeaderPanel.Controls.Add(historyLabel);
+
             historyList = new ListBox();
             styleListBox(historyList);
 
             historyPanel.Controls.Add(historyList);
+            historyPanel.Controls.Add(historyHeaderPanel);
 
             // Add panels to right panel
             rightPanel.Controls.Add(historyPanel);

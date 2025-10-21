@@ -10,7 +10,7 @@ namespace SimpleWebBrowser
         private Button loginButton;
         private Button registerButton;
         private Label statusLabel;
-        private readonly BrowserStorage storage;
+        private readonly DataManager storage;
 
         public LoginForm()
         {
@@ -21,7 +21,7 @@ namespace SimpleWebBrowser
             MaximizeBox = false;
             MinimizeBox = false;
 
-            storage = BrowserStorage.Instance;
+            storage = DataManager.Instance;
             InitializeComponents();
         }
 
