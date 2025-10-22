@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SimpleWebBrowser")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+48a8d54ae493aebc8291c0b750586e01f0e50284")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0d0b96507af1012a0a82d55419b8d4b3d6711e02")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimpleWebBrowser")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimpleWebBrowser")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

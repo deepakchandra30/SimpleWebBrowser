@@ -1,0 +1,2 @@
+C:\Users\deepa\Documents\SimpleWebBrowser\publish_single\SimpleWebBrowser.pdb
+C:\Users\deepa\Documents\SimpleWebBrowser\publish_single\SimpleWebBrowser.exe
